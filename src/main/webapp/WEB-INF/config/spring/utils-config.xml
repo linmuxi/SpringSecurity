@@ -12,7 +12,7 @@
 
 	<!-- 全局配置文件资源 -->
 	<bean id="configResource" class="org.springframework.core.io.ClassPathResource">
-		<constructor-arg name="path" value="com/hunter/common/resource/config.properties"></constructor-arg>
+		<constructor-arg name="path" value="config.properties"></constructor-arg>
 	</bean>
 
 	<!-- 提供spring上下文支持 -->
