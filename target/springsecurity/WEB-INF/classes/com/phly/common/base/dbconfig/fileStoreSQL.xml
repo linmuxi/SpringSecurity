@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fileStore">
+
+	<!-- 查询附件列表 -->
+	<select id="queryFileStoreList" parameterType="com.phly.common.base.model.FileStoreVO"
+		resultType="com.phly.common.base.model.FileStoreVO" flushCache="true">
+	 SELECT ID id,
+	 		BUSINESSID businessId,
+	 		FILENAME fileName,
+	 		URL url,
+	 		FILEPATH filePath,
+	 		TYPE type,
+	 		SIZE size,
+	 		SUFFIX suffix,
+	 		`DESC` `desc`,
+			CREATE_TIME createTime,
+			CREATE_USER creator,
+			UPDATE_TIME updateTime,
+			UPDATE_USER updater
+	   FROM t_file_store
+		<where>
+		    1 = 1 
+			<if test="businessId != null and businessId != ''">
+				AND BUSINESSID = #{businessId}
+			</if>
+			<if test="type != null and type != ''">
+				AND TYPE = #{type}
+			</if>
+		</where>
+		<if test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+			ORDER BY ${sortFieldName} ${sortType}
+		</if>
+		<if test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+			ORDER BY CREATE_TIME DESC
+		</if>
+	</select>
+	
+	<!-- 查询附件总数 -->
+	<select id="getFileStoreCount" parameterType="com.phly.common.base.model.FileStoreVO"
+		resultType="int" flushCache="true">
+		 SELECT COUNT(1)
+  		   FROM t_file_store
+	</select>
+	
+	<!-- 根据id或者名称查询附件-->
+	<select id="getFileStore" parameterType="com.phly.common.base.model.FileStoreVO"
+		resultType="com.phly.common.base.model.FileStoreVO">
+	  SELECT ID id,
+	 		BUSINESSID businessId,
+	 		FILENAME fileName,
+	 		URL url,
+	 		FILEPATH filePath,
+	 		TYPE type,
+	 		SIZE size,
+	 		SUFFIX suffix,
+	 		`DESC` `desc`,
+			CREATE_TIME createTime,
+			CREATE_USER creator,
+			UPDATE_TIME updateTime,
+			UPDATE_USER updater
+	   FROM t_file_store
+		<where>
+			1 = 1 
+			<if test="businessId != null and businessId != ''">
+				AND BUSINESSID = #{businessId}
+			</if>
+			<if test="id != null and id != ''">
+				AND ID = #{id}
+			</if>
+		</where>
+	</select>
+	
+	
+	
+	
+	<insert id="addFileStore" parameterType="com.phly.common.base.model.FileStoreVO">
+	  INSERT INTO t_file_store(
+			 ID,
+			 BUSINESSID,
+       		 FILENAME,
+       		 URL,
+			 FILEPATH,
+			 TYPE,
+			 SIZE,
+			 SUFFIX,
+			 `DESC`,
+			 CREATE_TIME,
+			 CREATE_USER,
+			 UPDATE_TIME,
+			 UPDATE_USER)
+	  VALUES (
+	  		 #{id},
+			 <!-- UCASE(REPLACE(UUID(),'-','')), -->
+			 #{businessId},
+			 #{fileName},
+			 #{url},
+			 #{filePath},
+			 #{type},
+			 #{size},
+			 #{suffix},
+			 #{desc},
+			 NOW(),
+			 #{creator},
+			 NOW(),
+			 #{creator}
+			 )
+	</insert>
+	
+	<delete id="delFileStore" parameterType="com.phly.common.base.model.FileStoreVO">
+		DELETE FROM t_file_store
+		 WHERE ID = #{id}
+	</delete>
+</mapper>

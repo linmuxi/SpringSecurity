@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dict">
+
+	<resultMap id="queryDictTypeList-resultMap" type="java.util.Map" >
+		<result column="id" property="id" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="default_value_type" property="defaultValueType" jdbcType="INTEGER" javaType="int"/>
+		<result column="type" property="type" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="default_key" property="defaultKey" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="default_value" property="defaultValue" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="sort" property="sort" jdbcType="INTEGER" javaType="int"/>
+		<result column="remark" property="remark" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="expand1" property="expand1" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="expand2" property="expand2" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="expand3" property="expand3" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="expand4" property="expand4" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result column="expand5" property="expand5" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+	
+	<!-- 查询所有数据字典值 Start -->
+	<select id="queryDictList"  resultMap="queryDictTypeList-resultMap" parameterType="com.phly.common.base.model.DictVO">
+	 	select id,default_value_type,type,default_key,default_value,sort,expand1,expand2,expand3,expand4,expand5,remark from t_dict t
+		<if test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+			ORDER BY ${sortFieldName} ${sortType}
+		</if>
+		<if test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+			ORDER BY sort DESC
+		</if>
+	</select>
+	<!-- 查询所有数据字典值 End -->
+	
+	
+	<!-- 查询所有数据字典值总条数 start -->
+	<select id="getDictCount" parameterType="com.phly.common.base.model.DictVO" resultType="int" flushCache="true">
+		SELECT count(1) FROM t_dict t where 1 = 1
+		<if test="type != null and type != ''">
+				and t.type like CONCAT('%',#{type},'%')
+		</if>
+	</select>
+	<!-- 查询所有数据字典值总条数 end -->
+	
+	
+	<!-- 查询所有数据字典值 Start -->
+	<select id="queryAllDictList"  resultMap="queryDictTypeList-resultMap" parameterType="com.phly.common.base.model.DictVO">
+	 	select id,default_value_type,type,default_key,default_value,sort,expand1,expand2,expand3,expand4,expand5,remark  from t_dict t where 1 = 1
+	 	<if test="type != null and type != ''">
+				and t.type like CONCAT('%',#{type},'%')
+		</if>
+		<if test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+			ORDER BY ${sortFieldName} ${sortType}
+		</if>
+		<if test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+			ORDER BY sort DESC
+		</if>
+	</select>
+	<!-- 查询所有数据字典值 End -->
+	
+	
+	<!-- 查询一个数据字典值 Start -->
+	<select id="getOneDict"  resultMap="queryDictTypeList-resultMap" parameterType="java.lang.String">
+	 	select id,default_value_type,type,default_key,default_value,sort,expand1,expand2,expand3,expand4,expand5,remark  from t_dict t where 1 = 1
+	 	and t.id = #{id}
+	</select>
+	<!-- 查询一个数据字典值 End -->
+	
+	
+	<insert id="addDict"  parameterType="com.phly.common.base.model.DictVO">
+		<selectKey resultType="java.lang.String" order="BEFORE" keyProperty="id">
+			SELECT UPPER(REPLACE(UUID(),'-',''))
+		</selectKey>
+		INSERT INTO t_dict
+		(id,
+		type,
+		default_key,
+		default_value,
+		sort,
+		expand1,
+		expand2,
+		expand3,
+		expand4,
+		expand5,
+		remark,
+		create_date,
+		creator,
+		default_value_type
+		)
+		VALUES (
+		#{id},
+		#{type},
+		#{defaultKey},
+		#{defaultValue},
+		#{sort},
+		#{expand1},
+		#{expand2},
+		#{expand3},
+		#{expand4},
+		#{expand5},
+		#{remark},
+		#{createDate},
+		#{creator},
+		#{defaultValueType}
+		)
+	</insert>
+
+
+	<update id="updateDict" parameterType="com.phly.common.base.model.DictVO">
+		UPDATE t_dict
+		SET
+		type=#{type},
+		default_key=#{defaultKey},
+		default_value=#{defaultValue},
+		sort=#{sort},
+		expand1=#{expand1},
+		expand2=#{expand2},
+		expand3=#{expand3},
+		expand4=#{expand4},
+		expand5=#{expand5},
+		remark=#{remark},
+		default_value_type=#{defaultValueType}
+		WHERE id=#{id}
+	</update>
+	
+	
+	<delete id="delDict" parameterType="com.phly.common.base.model.DictVO">
+		DELETE FROM t_dict
+		 WHERE id = #{id};
+	</delete>
+	
+	
+</mapper>

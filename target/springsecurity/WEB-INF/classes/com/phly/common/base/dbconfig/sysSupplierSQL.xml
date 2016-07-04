@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sysSupplier">
+
+	<!-- 查询供应商列表 -->
+	<select id="querySysSupplierList" parameterType="com.phly.common.base.model.SysSupplierVO"
+		resultType="com.phly.common.base.model.SysSupplierVO">
+		SELECT
+		SUPPLIERID supplierId,
+		SUPNO supNo,
+		CONTRACTCODE contractCode,
+		CMBPEOPLENAME cmbPeopleName,
+		SUPNAME supName,
+		SUPEMAIL supEmail,
+		SUPPHONE supPhone,
+		SUPFAXES supFaxes,
+		SUPADDRESS supAddress,
+		BUSLICENSE busLicense,
+		BANKACCOUNTNAME bankAccountName,
+		BANKACCOUNTNO bankAccountNo,
+		BANKADDRESS bankAddress,
+		LINKPEOPLENAME linkPeopleName,
+		LIKEPEOPLEPHONE linkPeoplePhone,
+		LIKEPEOPLEQQ linkPeopleQQ,
+		LIKEPEOPLEEMAIL linkPeopleEmail,
+		LIKEPEOPLEADDRESS linkPeopleAddress,
+		HEADPEOPLECARDNO HeadPeopleCardNo,
+		HEADPEOPLENAME headPeopleName,
+		HEADPEOPLEPHONE headPeoplePhone,
+		HEADPEOPLEQQ headPeopleQQ,
+		HEADPEOPLEEMAIL headPeopleEmail,
+		SUPTYPE supType,
+		CREATEDATE createDate,
+		CREATOR ,
+		LAST_UPDATE_DATE,
+		LAST_UPDATER,
+		ISLOCKED isLocked,
+		ISDEL idDel,
+		SUPSTATE supState,
+		REMARK remark
+		FROM sys_supplier_t t
+		<where>
+			1 = 1 AND t.ISDEL = 1
+			<if test="supNo != null and supNo != ''">
+				and t.SUPNO like CONCAT('%',#{supNo},'%')
+			</if>
+			<if test="contractCode != null and contractCode != ''">
+				and t.CONTRACTCODE like CONCAT('%',#{contractCode},'%')
+			</if>
+			<if test="cmbPeopleName != null and cmbPeopleName != ''">
+				and t.CMBPEOPLENAME like CONCAT('%',#{cmbPeopleName},'%')
+			</if>
+			<if test="supType != null and supType != ''">
+				and t.SUPTYPE like CONCAT('%',${supType},'%')
+			</if>
+		</where>
+		<if
+			test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+			ORDER BY ${sortFieldName} ${sortType}
+		</if>
+		<if test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+			ORDER BY T.LAST_UPDATE_DATE DESC
+		</if>
+	</select>
+
+	<select id="getSupplierCount" parameterType="com.phly.common.base.model.SysSupplierVO"
+		resultType="int">
+		SELECT count(1) FROM sys_supplier_t t
+		<where>
+			1 = 1 AND t.ISDEL = 1
+			<if test="supNo != null and supNo != ''">
+				and t.SUPNO like CONCAT('%',#{supNo},'%')
+			</if>
+		</where>
+	</select>
+
+	<insert id="addSupplier" parameterType="com.phly.common.base.model.SysSupplierVO">
+		INSERT INTO sys_supplier_t
+		(SUPPLIERID,
+		SUPNO,
+		CONTRACTCODE,
+		CMBPEOPLENAME,
+		SUPNAME,
+		SUPEMAIL,
+		SUPPHONE,
+		SUPFAXES,
+		SUPADDRESS,
+		BUSLICENSE,
+		BANKACCOUNTNAME,
+		BANKACCOUNTNO,
+		BANKADDRESS,
+		LINKPEOPLENAME,
+		LIKEPEOPLEPHONE,
+		LIKEPEOPLEQQ,
+		LIKEPEOPLEEMAIL,
+		LIKEPEOPLEADDRESS,
+		HEADPEOPLECARDNO,
+		HEADPEOPLENAME,
+		HEADPEOPLEPHONE,
+		HEADPEOPLEQQ,
+		HEADPEOPLEEMAIL,
+		SUPTYPE,
+		CREATEDATE,
+		CREATOR,
+		LAST_UPDATE_DATE,
+		LAST_UPDATER,
+		ISDEL,
+		ISLOCKED,
+		SUPSTATE,
+		REMARK)
+		VALUES (
+		UPPER(REPLACE(UUID(),'-','')),
+		#{supNo},
+		#{contractCode},
+		#{cmbPeopleName},
+		#{supName},
+		#{supEmail},
+		#{supPhone},
+		#{supFaxes},
+		#{supAddress},
+		#{busLicense},
+		#{bankAccountName},
+		#{bankAccountNo},
+		#{bankAddress},
+		#{linkPeopleName},
+		#{linkPeoplePhone},
+		#{linkPeopleQQ},
+		#{linkPeopleEmail},
+		#{linkPeopleAddress},
+		#{headPeopleCardNo},
+		#{headPeopleName},
+		#{headPeoplePhone},
+		#{headPeopleQQ},
+		#{headPeopleEmail},
+		#{supType},
+		#{createDate},
+		#{creator},
+		#{lastUpdateDate},
+		#{lastUpdater},
+		#{isDel},
+		#{isLocked},
+		#{supState},
+		#{remark})
+	</insert>
+
+
+	<update id="updateSupplier" parameterType="com.phly.common.base.model.SysSupplierVO">
+		UPDATE sys_supplier_t
+		SET
+		SUPNO=#{supNo},
+		CONTRACTCODE=#{contractCode},
+		CMBPEOPLENAME=#{cmbPeopleName},
+		SUPNAME=#{supName},
+		SUPEMAIL=#{supEmail},
+		SUPPHONE=#{supPhone},
+		SUPFAXES=#{supFaxes},
+		SUPADDRESS=#{supAddress},
+		BUSLICENSE=#{busLicense},
+		BANKACCOUNTNAME=#{bankAccountName},
+		BANKACCOUNTNO=#{bankAccountNo},
+		BANKADDRESS=#{bankAddress},
+		LINKPEOPLENAME=#{linkPeopleName},
+		LIKEPEOPLEPHONE=#{linkPeoplePhone},
+		LIKEPEOPLEQQ=#{linkPeopleQQ},
+		LIKEPEOPLEEMAIL=#{linkPeopleEmail},
+		LIKEPEOPLEADDRESS=#{linkPeopleAddress},
+		HEADPEOPLECARDNO=#{headPeopleCardNo},
+		HEADPEOPLENAME=#{headPeopleName},
+		HEADPEOPLEPHONE=#{headPeoplePhone},
+		HEADPEOPLEQQ=#{headPeopleQQ},
+		HEADPEOPLEEMAIL=#{headPeopleEmail},
+		LAST_UPDATE_DATE=NOW(),
+		LAST_UPDATER=#{lastUpdater},
+		ISLOCKED=#{isLocked},
+		ISDEL=${isDel},
+		SUPTYPE=${supType},
+		SUPSTATE=${supState},
+		REMARK=#{remark} 
+		WHERE SUPPLIERID = #{supplierId}
+	</update>
+	
+	<update id="delSupplier" parameterType="com.phly.common.base.model.SysSupplierVO">
+		UPDATE sys_supplier_t SET  ISDEL = 0,LAST_UPDATE_DATE = NOW() WHERE SUPPLIERID = #{supplierId}
+	</update>
+	
+	<select id="getSupplier" parameterType="com.phly.common.base.model.SysSupplierVO"
+		resultType="com.phly.common.base.model.SysSupplierVO">
+		SELECT
+		SUPPLIERID id,
+		SUPNO supNo,
+		CONTRACTCODE contractCode,
+		CMBPEOPLENAME cmbPeopleName,
+		SUPNAME supName,
+		SUPEMAIL supEmail,
+		SUPPHONE supPhone,
+		SUPFAXES supFaxes,
+		SUPADDRESS supAddress,
+		BUSLICENSE busLicense,
+		BANKACCOUNTNAME bankAccountName,
+		BANKACCOUNTNO bankAccountNo,
+		BANKADDRESS bankAddress,
+		LINKPEOPLENAME linkPeopleName,
+		LIKEPEOPLEPHONE linkPeoplePhone,
+		LIKEPEOPLEQQ linkPeopleQQ,
+		LIKEPEOPLEEMAIL linkPeopleEmail,
+		LIKEPEOPLEADDRESS linkPeopleAddress,
+		HEADPEOPLECARDNO HeadPeopleCardNo,
+		HEADPEOPLENAME headPeopleName,
+		HEADPEOPLEPHONE headPeoplePhone,
+		HEADPEOPLEQQ headPeopleQQ,
+		HEADPEOPLEEMAIL headPeopleEmail,
+		SUPTYPE supType,
+		CREATEDATE createDate,
+		CREATOR creator,
+		LAST_UPDATE_DATE lastUpdateDate,
+		LAST_UPDATER lastUpdater,
+		ISDEL idDel,
+		ISLOCKED isLocked,
+		SUPSTATE supState,
+		REMARK remark
+		FROM sys_supplier_t t
+		<where>
+			<if test="supNo != null and supNo != ''">
+				t.SUPNO = #{supNo}
+			</if>
+			<if test="supplierId != null and supplierId != ''">
+				AND t.SUPPLIERID = #{supplierId}
+			</if>
+		</where>
+	</select>
+
+</mapper>

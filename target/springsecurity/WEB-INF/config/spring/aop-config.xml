@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+		     http://www.springframework.org/schema/beans
+		     http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		     http://www.springframework.org/schema/aop
+		     http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		     http://www.springframework.org/schema/tx
+		     http://www.springframework.org/schema/tx/spring-tx-3.2.xsd">
+
+	<!--  DWR层异常处理切面-->
+	<!-- <aop:config>
+		<aop:aspect id="dwrRound" ref="dwrExceptionAspect">
+			<aop:pointcut id="dwrExceptionPointcut" expression="execution(* com.hunter..*.action..*.*(..)) and @annotation(org.directwebremoting.annotations.RemoteMethod)" />
+			<aop:around pointcut-ref="dwrExceptionPointcut" method="doAround" />
+		</aop:aspect>
+	</aop:config> -->
+	
+	<!--  SpringMVC层异常处理切面-->
+	<aop:config>
+		<aop:aspect id="mvcRound" ref="mvcExceptionAspect">
+			<aop:pointcut id="mvcExceptionPointcut" expression="execution(* com.hunter..*.action..*.*(..)) and @annotation(org.springframework.web.bind.annotation.RequestMapping)" />
+			<aop:around pointcut-ref="mvcExceptionPointcut" method="doAround" />
+		</aop:aspect>
+	</aop:config>
+
+	<!-- 数据库声明事务 -->
+	<bean id="txManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+		</bean>
+	<tx:annotation-driven proxy-target-class="true"
+		transaction-manager="txManager" />
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true" propagation="NOT_SUPPORTED" />
+			<tx:method name="query*" read-only="true" propagation="NOT_SUPPORTED" />
+			<tx:method name="*NoJTA" read-only="true" propagation="NOT_SUPPORTED" />
+			<tx:method name="*" propagation="REQUIRED" />
+		</tx:attributes>
+	</tx:advice>
+
+	<aop:config>
+		<aop:pointcut id="transactionOperation"
+			expression="execution(* com.hunter..*.facade.*.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="transactionOperation"
+			order="2" />
+	</aop:config>
+	<!-- 数据库声明事务 end -->
+
+</beans>

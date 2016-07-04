@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sysRole">
+
+	<!-- 查询角色列表 -->
+	<select id="queryRoleList" parameterType="com.phly.common.base.model.SysRoleVO"
+		resultType="com.phly.common.base.model.SysRoleVO">
+		SELECT
+		  ROLE_ID roleId,
+		  ROLE_NAME roleName,
+		  ROLE_DESC roleDesc,
+		  ENABLE enable
+		FROM sys_roles_t t
+		<where>
+			1 = 1 AND T.IS_DEL = 0
+			<if test="roleName != null and roleName != ''">
+				and t.ROLE_NAME like CONCAT('%',#{roleName},'%')
+			</if>
+			<if test="searchPhrase != null and searchPhrase != ''">
+				and (t.ROLE_NAME like CONCAT('%',#{searchPhrase},'%') or t.ROLE_DESC like CONCAT('%',#{searchPhrase},'%'))
+			</if>
+		</where>
+		<if test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+			ORDER BY ${sortFieldName} ${sortType}
+		</if>
+		<if test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+			ORDER BY T.LAST_UPDATE_DATE DESC
+		</if>
+	</select>
+
+	<select id="getRoleCount" parameterType="com.phly.common.base.model.SysRoleVO"
+		resultType="int">
+		SELECT count(1) FROM sys_roles_t t
+		<where>
+			1 = 1 AND T.IS_DEL = 0
+			<if test="roleName != null and roleName != ''">
+				and t.ROLE_NAME like CONCAT('%',#{roleName},'%')
+			</if>
+			<if test="searchPhrase != null and searchPhrase != ''">
+				and (t.ROLE_NAME like CONCAT('%',#{searchPhrase},'%') or t.ROLE_DESC like CONCAT('%',#{searchPhrase},'%'))
+			</if>
+		</where>
+	</select>
+	
+	<insert id="addRole" parameterType="com.phly.common.base.model.SysRoleVO">
+		INSERT INTO sys_roles_t
+		            (ROLE_ID,
+		             ROLE_NAME,
+		             ROLE_DESC,
+		             ENABLE,
+		             CREATE_DATE,
+		             CREATOR,
+		             LAST_UPDATE_DATE,
+		             LAST_UPDATER,
+		             IS_DEL)
+		VALUES (UPPER(REPLACE(UUID(),'-','')),
+		        #{roleName},
+		        #{roleDesc},
+		        ${enable},
+		        NOW(),
+		        #{creator},
+		        NOW(),
+		        #{creator},
+		        0)
+	</insert>
+	
+	<update id="updateRole" parameterType="com.phly.common.base.model.SysRoleVO">
+		UPDATE sys_roles_t
+		SET 
+		  ROLE_NAME = #{roleName},
+		  ROLE_DESC = #{roleDesc},
+		  ENABLE = ${enable},
+		  LAST_UPDATE_DATE = NOW(),
+		  LAST_UPDATER = #{updater}
+		WHERE ROLE_ID = #{roleId}
+	</update>
+	
+	<update id="delRole" parameterType="com.phly.common.base.model.SysRoleVO">
+		UPDATE sys_roles_t SET  IS_DEL = 1,LAST_UPDATE_DATE = NOW() WHERE ROLE_ID = #{roleId}
+	</update>
+	
+	<select id="getRole" parameterType="com.phly.common.base.model.SysRoleVO"
+		resultType="com.phly.common.base.model.SysRoleVO">
+		SELECT 
+		  ROLE_ID roleId,
+		  ROLE_NAME roleName,
+		  ROLE_DESC roleDesc,
+		  ENABLE enable FROM sys_roles_t t
+		<where>
+			1 = 1 AND T.IS_DEL = 0
+			<if test="roleName != null and roleName != ''">
+				and t.ROLE_NAME = #{roleName}
+			</if>
+			<if test="roleId != null and roleId != ''">
+				AND t.ROLE_ID = #{roleId}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 查看角色拥有的模块 -->
+	<select id="getSelfModule" parameterType="com.phly.common.base.model.SysRoleVO" resultType="com.phly.common.base.model.SysModuleVO">
+		SELECT 
+		  module_id moduleId,
+		  module_name moduleName,
+		  module_desc moduleDesc
+		FROM sys_modules_t t1 
+		WHERE EXISTS 
+		  (SELECT 1  FROM sys_roles_moudles_t t3 
+		  	WHERE t3.role_id = #{roleId} AND t3.module_id = t1.module_id)	
+		  AND t1.IS_DEL = 0
+	</select>
+	
+	<!-- 查看自己未拥有的模块 -->
+	<select id="getNoSelfModule" parameterType="com.phly.common.base.model.SysRoleVO" resultType="com.phly.common.base.model.SysModuleVO">
+		SELECT 
+		  module_id moduleId,
+		  module_name moduleName,
+		  module_desc moduleDesc
+		FROM sys_modules_t t1 
+		WHERE NOT EXISTS 
+		  (SELECT 1  FROM sys_roles_moudles_t t3 
+		  	WHERE t3.role_id = #{roleId} AND t3.module_id = t1.module_id)	
+		  AND t1.IS_DEL = 0
+	</select>
+	
+	<!-- 删除角色模块关系数据 -->
+	<delete id="delRoleModule">
+		DELETE FROM sys_roles_moudles_t WHERE role_id = #{roleId}
+	</delete>
+	
+	<!-- 添加角色模块关系数据 -->
+	<insert id="addRoleModule" parameterType="com.phly.common.base.model.SysModuleVO">
+		INSERT INTO sys_roles_moudles_t (
+		  ID,
+		  MODULE_ID,
+		  ROLE_ID,
+		  CREATE_DATE,
+		  CREATOR
+		) 
+		VALUES
+		  (UPPER(REPLACE(UUID(), '-', '')),
+		  #{moduleId},
+		  #{roleId},
+		  NOW(),
+		  #{creator}) 
+	</insert>
+	
+	
+	
+	<!-- 查看角色拥有的权限 -->
+	<select id="getSelfAuth" parameterType="com.phly.common.base.model.SysRoleVO" resultType="com.phly.common.base.model.SysAuthorityVO">
+		SELECT 
+		  AUTHORITY_ID authorityId,
+		  AUTHORITY_NAME authorityName,
+		  AUTHORITY_DESC authorityDesc
+		FROM sys_authorities_t t1 
+		WHERE EXISTS 
+		  (SELECT 1  FROM sys_roles_authorities_t t3 
+		  	WHERE t3.role_id = #{roleId} AND t3.AUTHORITY_ID = t1.AUTHORITY_ID)	
+		  AND t1.IS_DEL = 0
+	</select>
+	
+	<!-- 查看自己未拥有的模块 -->
+	<select id="getNoSelfAuth" parameterType="com.phly.common.base.model.SysRoleVO" resultType="com.phly.common.base.model.SysAuthorityVO">
+		SELECT 
+		  AUTHORITY_ID authorityId,
+		  AUTHORITY_NAME authorityName,
+		  AUTHORITY_DESC authorityDesc
+		FROM sys_authorities_t t1 
+		WHERE NOT EXISTS 
+		  (SELECT 1  FROM sys_roles_authorities_t t3 
+		  	WHERE t3.role_id = #{roleId} AND t3.AUTHORITY_ID = t1.AUTHORITY_ID)	
+		  AND t1.IS_DEL = 0
+	</select>
+	
+	<!-- 删除角色模块关系数据 -->
+	<delete id="delRoleAuth">
+		DELETE FROM sys_roles_authorities_t WHERE role_id = #{roleId}
+	</delete>
+	
+	<!-- 添加角色模块关系数据 -->
+	<insert id="addRoleAuth" parameterType="com.phly.common.base.model.SysAuthorityVO">
+		INSERT INTO sys_roles_authorities_t
+		            (ID,
+		             AUTHORITY_ID,
+		             ROLE_ID,
+		             CREATE_DATE,
+		             CREATOR)
+		VALUES (UPPER(REPLACE(UUID(), '-', '')),
+		        #{authorityId},
+		        #{roleId},
+		        now(),
+		        #{creator})
+	</insert>
+</mapper>

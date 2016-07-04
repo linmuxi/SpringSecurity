@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sysModule">
+
+	<!-- 获取指定用户下的模块信息 -->
+	<select id="getSysModuleByAccount" parameterType="com.phly.common.base.model.SysModuleVO"
+		resultType="com.phly.common.base.model.SysModuleVO">
+		SELECT 
+		  t1.MODULE_ID moduleId,
+		  t1.MODULE_NAME moduleName,
+		  t1.MODULE_DESC moduleDesc,
+		  t1.MODULE_TYPE moduleType,
+		  t1.PARENT parent,
+		  t1.MODULE_URL moduleUrl,
+		  t1.I_LEVEL level,
+		  t1.ENABLE enable,
+		  t1.PRIORITY priority 
+		FROM
+		  sys_modules_t t1
+		WHERE EXISTS 
+		  (SELECT 
+		    1
+		  FROM
+		    sys_users_t t2,
+		    sys_users_roles_t t3,
+		    sys_roles_t t4,
+		    sys_roles_moudles_t t5 
+		  WHERE t2.USER_ID = t3.USER_ID 
+		    AND t3.ROLE_ID = t4.ROLE_ID 
+		    AND t4.ROLE_ID = t5.ROLE_ID 
+		    AND t2.ACCOUNT = #{account}
+		    AND t2.ENABLED = 1
+		    AND t4.ENABLE = 1
+		    and t2.is_del = 0
+		    and t4.is_del = 0
+		    AND t5.MODULE_ID = t1.MODULE_ID) 
+		  AND t1.PARENT = #{moduleId}
+		  AND t1.ENABLE = 1
+		  AND T1.IS_DEL = 0
+		ORDER BY t1.PRIORITY, t1.CREATE_DATE ASC 
+	</select>
+
+	<!-- 查询所有模块 -->
+	<select id="querySysModules" parameterType="com.phly.common.base.model.SysModuleVO"
+		resultType="com.phly.common.base.model.SysModuleVO">
+		SELECT 
+		  MODULE_ID moduleId,
+		  MODULE_NAME moduleName,
+		  MODULE_DESC moduleDesc,
+		  MODULE_TYPE moduleType,
+		  PARENT parent,
+		  MODULE_URL moduleUrl,
+		  I_LEVEL level,
+		  ENABLE enable,
+		  PRIORITY priority,
+		  CREATE_DATE createDate,
+		  CREATOR creator,
+		  LAST_UPDATE_DATE updateTime,
+		  LAST_UPDATER updater 
+		FROM SYS_MODULES_T T 
+		<include refid="getCondition"></include> 
+		<if test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+			ORDER BY ${sortFieldName} ${sortType}
+		</if>
+		<if test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+			ORDER BY T.LAST_UPDATE_DATE DESC
+		</if>
+	</select>
+	
+	<!-- 获取模块总数 -->
+	<select id="getSysModuleCount" parameterType="com.phly.common.base.model.SysModuleVO"
+		resultType="int">
+		SELECT COUNT(1) count FROM SYS_MODULES_T T
+		<include refid="getCondition"></include> 
+	</select>
+	
+	<sql id="getCondition">
+	  <where>
+	  	1 = 1 and t.is_del = 0
+	  	<if test="parent != null and parent != ''">
+	  		and t.PARENT = #{parent}
+	  	</if>
+	  	<if test="moduleType != null and moduleType != ''">
+	  		and t.MODULE_TYPE = #{moduleType}
+	  	</if>
+		<if test="searchPhrase != null and searchPhrase != ''">
+			and (t.MODULE_NAME like CONCAT('%',#{searchPhrase},'%') or t.MODULE_DESC like CONCAT('%',#{searchPhrase},'%'))
+		</if>
+	  </where>
+	</sql>
+	
+	<insert id="addModule" parameterType="com.phly.common.base.model.SysModuleVO">
+		INSERT INTO sys_modules_t
+		            (MODULE_ID,
+		             MODULE_NAME,
+		             MODULE_DESC,
+		             MODULE_TYPE,
+		             PARENT,
+		             MODULE_URL,
+		             I_LEVEL,
+		             ENABLE,
+		             PRIORITY,
+		             CREATE_DATE,
+		             CREATOR,
+		             LAST_UPDATE_DATE,
+		             LAST_UPDATER,
+		             IS_DEL)
+		VALUES (UPPER(REPLACE(UUID(),'-','')),
+		        #{moduleName},
+		        #{moduleDesc},
+		        ${moduleType},
+		        #{parent},
+		        #{moduleUrl},
+		        (select i_level+1 from sys_modules_t tt where tt.module_Id = #{parent}),
+		        ${enable},
+		        ${priority},
+		        NOW(),
+		        #{creator},
+		        NOW(),
+		        #{creator},
+		        0)  
+	</insert>
+	
+	<update id="updateModule" parameterType="com.phly.common.base.model.SysModuleVO">
+		UPDATE 
+		  SYS_MODULES_T 
+		SET
+		  MODULE_NAME = #{moduleName},
+		  MODULE_DESC = #{moduleDesc},
+		  MODULE_TYPE = ${moduleType},
+		  PARENT = #{parent},
+		  MODULE_URL = #{moduleUrl},
+		  I_LEVEL = ${level},
+		  ENABLE = ${enable},
+		  PRIORITY = ${priority},
+		  LAST_UPDATE_DATE = NOW(),
+		  LAST_UPDATER = #{creator} 
+		WHERE MODULE_ID = #{moduleId}
+	</update>
+	
+	<delete id="delModule" parameterType="com.phly.common.base.model.SysModuleVO">
+		UPDATE sys_modules_t
+		SET IS_DEL = 1,
+			LAST_UPDATE_DATE = NOW(),
+			LAST_UPDATER = #{updater}
+		WHERE MODULE_ID = #{moduleId}
+	</delete>
+	
+	<select id="getModule" parameterType="com.phly.common.base.model.SysModuleVO"
+		resultType="com.phly.common.base.model.SysModuleVO">
+		SELECT 
+		  MODULE_ID moduleId,
+		  MODULE_NAME moduleName,
+		  MODULE_DESC moduleDesc,
+		  MODULE_TYPE moduleType,
+		  PARENT parent,
+		  MODULE_URL moduleUrl,
+		  I_LEVEL level,
+		  ENABLE enable,
+		  PRIORITY priority,
+		  CREATE_DATE createDate,
+		  CREATOR creator,
+		  LAST_UPDATE_DATE updateTime,
+		  LAST_UPDATER updater 
+		FROM SYS_MODULES_T T 
+		<where>
+		  	1 = 1 and t.is_del = 0
+		  	<if test="moduleId != null and moduleId != ''">
+		  		and t.MODULE_ID = #{moduleId}
+		  	</if>
+		</where>	
+	</select>
+	
+</mapper>

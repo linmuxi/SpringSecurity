@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sysUser">
+
+	<!-- 根据帐号获取用户信息 -->
+	<select id="getUserByAccount" parameterType="string"
+		resultType="com.phly.common.base.model.SysUserVO">
+		SELECT
+		USER_ID userId,
+		NAME userName,
+		ACCOUNT account,
+		PASSWORD password,
+		CREATE_DATE createDate,
+		LAST_LOGIN_DATE
+		lastLoginDate,
+		LOGOUT_DATE logoutDate,
+		LAST_LOGIN_IP lastLoginIp,
+		ORG_ID
+		orgId,
+		ENABLED enabled,
+		ACCOUNT_NON_EXPIRED
+		accountNonExpired,
+		ACCOUNT_NON_LOCKED accountNonLocked,
+		CREDENTIALS_NON_EXPIRED
+		credentialsNonExpired
+		FROM SYS_USERS_T
+		WHERE ACCOUNT = #{account} and
+		IS_DEL = 0 limit 0,1
+	</select>
+
+	<!-- 查询用户列表 -->
+	<select id="queryUserList" parameterType="com.phly.common.base.model.SysUserVO"
+		resultType="com.phly.common.base.model.SysUserVO">
+		SELECT
+		USER_ID userId,
+		NAME userName,
+		ACCOUNT account,
+		PASSWORD password,
+		CREATE_DATE createDate,
+		LAST_LOGIN_DATE lastLoginDate,
+		LOGOUT_DATE
+		logoutDate,
+		LAST_LOGIN_IP lastLoginIp,
+		(SELECT org_name FROM
+		sys_department_t it WHERE it.id= t.org_id ) orgName,
+		ENABLED enabled,
+		ACCOUNT_NON_EXPIRED
+		accountNonExpired,
+		ACCOUNT_NON_LOCKED
+		accountNonLocked,
+		CREDENTIALS_NON_EXPIRED credentialsNonExpired
+		FROM
+		sys_users_t t
+		<where>
+			1 = 1 AND T.IS_DEL = 0
+			<if test="userName != null and userName != ''">
+				and t.NAME like CONCAT('%',#{userName},'%')
+			</if>
+			<if test="searchPhrase != null and searchPhrase != ''">
+				and (t.NAME like CONCAT('%',#{searchPhrase},'%') or
+				t.ACCOUNT like CONCAT('%',#{searchPhrase},'%'))
+			</if>
+			<if test="orgId != null and orgId != ''">
+				and t.org_id = #{orgId}
+			</if>
+		</where>
+		<if
+			test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+			ORDER BY ${sortFieldName} ${sortType}
+		</if>
+		<if
+			test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+			ORDER BY T.LAST_UPDATE_DATE DESC
+		</if>
+	</select>
+
+	<select id="getUser" parameterType="com.phly.common.base.model.SysUserVO"
+		resultType="com.phly.common.base.model.SysUserVO">
+		SELECT
+		USER_ID userId,
+		NAME userName,
+		ACCOUNT account,
+		PASSWORD password,
+		CREATE_DATE createDate,
+		LAST_LOGIN_DATE lastLoginDate,
+		LOGOUT_DATE
+		logoutDate,
+		LAST_LOGIN_IP lastLoginIp,
+		ORG_ID orgId,
+		(SELECT org_name
+		FROM sys_department_t it WHERE it.id= t.org_id ) orgName,
+		ENABLED
+		enabled,
+		ACCOUNT_NON_EXPIRED
+		accountNonExpired,
+		ACCOUNT_NON_LOCKED
+		accountNonLocked,
+		CREDENTIALS_NON_EXPIRED credentialsNonExpired
+		FROM
+		sys_users_t t
+		<where>
+			1 = 1 AND T.IS_DEL = 0
+			<if test="userName != null and userName != ''">
+				and t.NAME = #{userName}
+			</if>
+			<if test="account != null and account != ''">
+				and t.ACCOUNT = #{account}
+			</if>
+			<if test="userId != null and userId != ''">
+				AND t.USER_ID = #{userId}
+			</if>
+		</where>
+	</select>
+	
+	
+	<select id="getUserIncludAllByUserId" parameterType="com.phly.common.base.model.SysUserVO"
+		resultType="com.phly.common.base.model.SysUserVO">
+		SELECT
+		USER_ID userId,
+		NAME userName,
+		ACCOUNT account,
+		PASSWORD password,
+		CREATE_DATE createDate,
+		LAST_LOGIN_DATE lastLoginDate,
+		LOGOUT_DATE
+		logoutDate,
+		LAST_LOGIN_IP lastLoginIp,
+		ORG_ID orgId,
+		(SELECT org_name
+		FROM sys_department_t it WHERE it.id= t.org_id ) orgName,
+		ENABLED
+		enabled,
+		ACCOUNT_NON_EXPIRED
+		accountNonExpired,
+		ACCOUNT_NON_LOCKED
+		accountNonLocked,
+		CREDENTIALS_NON_EXPIRED credentialsNonExpired
+		FROM
+		sys_users_t t
+		<where>
+			1 = 1 
+			<if test="userId != null and userId != ''">
+				AND t.USER_ID = #{userId}
+			</if>
+		</where>
+	</select>
+	
+
+	<insert id="addUser" parameterType="com.phly.common.base.model.SysUserVO">
+		<selectKey resultType="java.lang.String" order="BEFORE"
+			keyProperty="userId">
+			select UPPER(REPLACE(UUID(),'-',''))
+		</selectKey>
+		INSERT INTO sys_users_t
+		(USER_ID,
+		NAME,
+		ACCOUNT,
+		PASSWORD,
+		LAST_LOGIN_DATE,
+		LOGOUT_DATE,
+		LAST_LOGIN_IP,
+		ORG_ID,
+		ENABLED,
+		ACCOUNT_NON_EXPIRED,
+		ACCOUNT_NON_LOCKED,
+		CREDENTIALS_NON_EXPIRED,
+		CREATE_DATE,
+		CREATOR,
+		LAST_UPDATE_DATE,
+		LAST_UPDATER,
+		IS_DEL,
+		TYPE)
+		VALUES
+		(#{userId},
+		#{userName},
+		#{account},
+		#{password},
+		NOW(),
+		NOW(),
+		null,
+		#{orgId},
+		<if test="enabled != true">
+			'0',
+		</if>
+		<if test="enabled == true">
+			'1',
+		</if>
+		<if test="accountNonExpired != true">
+			'0',
+		</if>
+		<if test="accountNonExpired == true">
+			'1',
+		</if>
+		<if test="accountNonLocked != true">
+			'0',
+		</if>
+		<if test="accountNonLocked == true">
+			'1',
+		</if>
+		<if test="credentialsNonExpired != true">
+			'0',
+		</if>
+		<if test="credentialsNonExpired == true">
+			'1',
+		</if>
+		NOW(),
+		#{creator},
+		NOW(),
+		#{creator},
+		0,
+		#{userType})
+	</insert>
+
+	<update id="updateUser" parameterType="com.phly.common.base.model.SysUserVO">
+		UPDATE sys_users_t
+		SET
+		<if test="userName != null and userName != ''">
+			NAME = #{userName},
+		</if>
+		<if test="orgId != null and orgId != ''">
+			ORG_ID = #{orgId},
+		</if>
+		<if test="password != null and password != ''">
+			PASSWORD = #{password},
+		</if>
+		<if test="enabled != true">
+			ENABLED = '0',
+		</if>
+		<if test="enabled == true">
+			ENABLED = '1',
+		</if>
+
+		<if test="accountNonExpired != true">
+			ACCOUNT_NON_EXPIRED = '0',
+		</if>
+		<if test="accountNonExpired == true">
+			ACCOUNT_NON_EXPIRED = '1',
+		</if>
+
+		<if test="accountNonLocked != true">
+			ACCOUNT_NON_LOCKED = '0',
+		</if>
+		<if test="accountNonLocked == true">
+			ACCOUNT_NON_LOCKED = '1',
+		</if>
+
+		<if test="credentialsNonExpired != true">
+			CREDENTIALS_NON_EXPIRED = '0',
+		</if>
+		<if test="credentialsNonExpired == true">
+			CREDENTIALS_NON_EXPIRED = '1',
+		</if>
+		LAST_UPDATE_DATE = NOW(),
+		LAST_UPDATER = #{updater}
+		WHERE USER_ID =
+		#{userId}
+	</update>
+
+	<delete id="delUser" parameterType="com.phly.common.base.model.SysUserVO">
+		UPDATE sys_users_t
+		SET IS_DEL
+		= 1,
+		LAST_UPDATE_DATE = NOW(),
+		LAST_UPDATER = #{updater}
+		WHERE USER_ID =
+		#{userId}
+	</delete>
+
+	<!-- 查询用户列表总数 -->
+	<select id="getUserCount" parameterType="com.phly.common.base.model.SysUserVO"
+		resultType="int">
+		SELECT count(1) FROM sys_users_t t
+		<where>
+			1 = 1 and IS_DEL = 0
+			<if test="userName != null and userName != ''">
+				and t.NAME like CONCAT('%',#{userName},'%')
+			</if>
+			<if test="searchPhrase != null and searchPhrase != ''">
+				and (t.NAME like CONCAT('%',#{searchPhrase},'%') or
+				t.ACCOUNT like CONCAT('%',#{searchPhrase},'%'))
+			</if>
+			<if test="orgId != null and orgId != ''">
+				and t.org_id = #{orgId}
+			</if>
+		</where>
+	</select>
+
+	<!-- 获取指定帐号下的所有权限 -->
+	<select id="getSysAuthoritiesByAccount" parameterType="string"
+		resultType="com.phly.common.base.model.SysAuthorityVO">
+		SELECT
+		T4.AUTHORITY_ID authorityId,
+		T4.AUTHORITY_MARK
+		authorityMark,
+		T4.AUTHORITY_NAME authorityName,
+		T4.AUTHORITY_DESC
+		authorityDesc,
+		T4.MESSAGE message,
+		T4.ENABLE FROM SYS_USERS_T
+		T1,SYS_USERS_ROLES_T T2,SYS_ROLES_AUTHORITIES_T T3,
+		SYS_AUTHORITIES_T
+		T4,SYS_ROLES_T T5
+		WHERE T1.USER_ID = T2.USER_ID AND T2.ROLE_ID =
+		T3.ROLE_ID AND
+		T3.AUTHORITY_ID = T4.AUTHORITY_ID AND T5.ROLE_ID =
+		T2.ROLE_ID
+		AND T5.ENABLE = 1 AND T4.ENABLE = 1 AND T1.ENABLED = 1 AND
+		T1.IS_DEL = 0
+		AND T4.IS_DEL = 0 AND T5.IS_DEL = 0
+		AND T1.ACCOUNT =
+		#{account}
+	</select>
+
+	<!-- 获取所有资源和权限映射数据 -->
+	<select id="queryResourceAuthority" resultType="hashmap">
+		SELECT
+		S3.RESOURCE_PATH,S2.AUTHORITY_MARK
+		FROM
+		SYS_AUTHORITIES_RESOURCES_T S1,
+		SYS_AUTHORITIES_T S2 ,
+		SYS_RESOURCES_T S3
+		WHERE
+		S1.AUTHORITY_ID =
+		S2.AUTHORITY_ID AND
+		S1.RESOURCE_ID = S3.RESOURCE_ID
+		AND
+		S3.RESOURCE_TYPE
+		= 1 AND S2.ENABLE = 1 AND S3.ENABLE = 1
+		AND
+		S2.IS_DEL = 0 AND S3.IS_DEL
+		= 0
+		ORDER BY S3.PRIORITY DESC
+	</select>
+
+	<!-- 保存用户登录ip和登录时间 -->
+	<update id="saveUserLoginIpAndDate" parameterType="com.phly.common.base.model.SysUserVO">
+		UPDATE
+		SYS_USERS_T
+		SET
+		LAST_LOGIN_DATE = #{lastLoginDate},
+		LAST_LOGIN_IP =
+		#{lastLoginIp}
+		WHERE USER_ID = #{userId}
+	</update>
+
+	<!-- 保存用户退出系统时间 -->
+	<update id="saveUserLogoutDate" parameterType="com.phly.common.base.model.SysUserVO">
+		UPDATE SYS_USERS_T
+		SET
+		LOGOUT_DATE = #{logoutDate}
+		WHERE USER_ID = #{userId}
+	</update>
+
+	<!-- 查看自己拥有的角色 -->
+	<select id="getSelfRole" parameterType="com.phly.common.base.model.SysUserVO"
+		resultType="com.phly.common.base.model.SysRoleVO">
+		SELECT
+		ROLE_ID roleId,
+		ROLE_NAME roleName,
+		ROLE_DESC roleDesc
+		FROM
+		sys_roles_t t1
+		WHERE EXISTS
+		(
+		SELECT 1 FROM sys_users_t
+		t2,sys_users_roles_t t3 WHERE t2.IS_DEL = 0
+		AND t2.user_id = t3.user_id
+		AND t3.ROLE_ID = t1.role_id
+		<if test="userId != null and userId != ''">
+			AND t3.USER_ID = #{userId}
+		</if>
+		<if test="account != null and account != ''">
+			AND t2.ACCOUNT = #{account}
+		</if>
+		)
+		AND t1.IS_DEL = 0 AND T1.ENABLE = 1
+	</select>
+
+	<!-- 查看自己未拥有的角色 -->
+	<select id="getNoSelfRole" parameterType="com.phly.common.base.model.SysUserVO"
+		resultType="com.phly.common.base.model.SysRoleVO">
+		SELECT
+		ROLE_ID roleId,
+		ROLE_NAME roleName,
+		ROLE_DESC roleDesc
+		FROM
+		sys_roles_t t1
+		WHERE NOT EXISTS
+		(
+		SELECT 1 FROM sys_users_t
+		t2,sys_users_roles_t t3 WHERE t2.IS_DEL = 0
+		AND t2.user_id = t3.user_id
+		AND t3.ROLE_ID = t1.role_id
+		<if test="userId != null and userId != ''">
+			AND t3.USER_ID = #{userId}
+		</if>
+		<if test="account != null and account != ''">
+			AND t2.ACCOUNT = #{account}
+		</if>
+		)
+		AND t1.IS_DEL = 0 AND T1.ENABLE = 1
+	</select>
+
+	<!-- 清除指定用户的角色数据 -->
+	<delete id="delUserRole" parameterType="com.phly.common.base.model.SysRoleVO">
+		delete from
+		sys_users_roles_t where user_id = #{userId}
+	</delete>
+
+	<!-- 添加用户角色关系数据 -->
+	<insert id="addUserRole" parameterType="com.phly.common.base.model.SysRoleVO">
+		INSERT INTO
+		sys_users_roles_t
+		(ID,
+		ROLE_ID,
+		USER_ID,
+		CREATE_DATE,
+		CREATOR)
+		VALUES
+		(UPPER(REPLACE(UUID(),'-','')),
+		#{roleId},
+		#{userId},
+		NOW(),
+		#{creator})
+	</insert>
+</mapper>

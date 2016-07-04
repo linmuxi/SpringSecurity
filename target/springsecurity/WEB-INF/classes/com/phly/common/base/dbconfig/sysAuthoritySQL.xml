@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sysAuthority">
+
+	<!-- 查询权限列表 start -->
+	<select id="queryAuthorityList" parameterType="com.phly.common.base.model.SysAuthorityVO"
+		resultType="com.phly.common.base.model.SysAuthorityVO" flushCache="true">
+			select t.AUTHORITY_ID authorityId,t.AUTHORITY_MARK authorityMark,t.AUTHORITY_NAME authorityName,
+			t.AUTHORITY_DESC authorityDesc,t.MESSAGE message,t.ENABLE enable,t.LAST_UPDATE_DATE lastUpdateDate,t.IS_DEL isDel
+			from sys_authorities_t t where t.is_del = 0
+			<if test="authorityName != null and authorityName != ''">
+				and t.AUTHORITY_NAME like CONCAT('%',#{authorityName},'%')
+			</if>
+			<if test="searchPhrase != null and searchPhrase != ''">
+				and (t.AUTHORITY_NAME like CONCAT('%',#{searchPhrase},'%') or t2.AUTHORITY_DESC like CONCAT('%',#{searchPhrase},'%'))
+			</if>
+			<if test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+				ORDER BY ${sortFieldName} ${sortType}
+			</if>
+			 <if test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+				ORDER BY t.LAST_UPDATE_DATE DESC
+			</if> 
+	</select>
+	<!-- 查询权限列表 end -->
+	
+	
+		
+	<!-- 查询权限未拥有的资源列表 start -->
+	<select id="getNoSelfAuth" parameterType="com.phly.common.base.model.SysAuthorityVO" resultType="com.phly.common.base.model.SysResourceVO" flushCache="true">
+			select RESOURCE_ID resourceId,RESOURCE_NAME resourceName,RESOURCE_DESC resourceDesc from
+sys_resources_t t1 where not exists (select 1 from sys_authorities_resources_t t3 where t3.AUTHORITY_ID = #{authorityId}
+and t3.RESOURCE_ID = t1.RESOURCE_ID) and t1.IS_DEL = 0
+	</select>
+	<!-- 查询权限未拥有的资源列表 end -->
+	
+	
+	
+	<!-- 查询权限拥有的资源列表 start -->
+	<select id="getSelfResource" parameterType="com.phly.common.base.model.SysAuthorityVO" resultType="com.phly.common.base.model.SysResourceVO" flushCache="true">
+			select RESOURCE_ID resourceId,RESOURCE_NAME resourceName,RESOURCE_DESC resourceDesc from
+sys_resources_t t1 where exists (select 1 from sys_authorities_resources_t t3 where t3.AUTHORITY_ID = #{authorityId}
+and t3.RESOURCE_ID = t1.RESOURCE_ID) and t1.IS_DEL = 0
+	</select>
+	<!-- 查询权限拥有的资源列表 end -->
+	
+	
+	<!-- 查询所有权限数据总条数 start -->
+	<select id="getAuthorityCount" parameterType="com.phly.common.base.model.SysAuthorityVO"
+		resultType="int" flushCache="true">
+		SELECT count(1) FROM sys_authorities_t t 
+	 	<where>
+	 		1 = 1 and t.IS_DEL = 0
+			<if test="authorityName != null and authorityName != ''">
+				and t.AUTHORITY_NAME like CONCAT('%',#{orgName},'%')
+				
+			</if>
+			<if test="searchPhrase != null and searchPhrase != ''">
+				and (t.AUTHORITY_NAME like CONCAT('%',#{searchPhrase},'%') or t.AUTHORITY_DESC like CONCAT('%',#{searchPhrase},'%'))
+			</if>
+		</where> 
+	</select>
+	<!-- 查询所有权限数据总条数 end -->
+	
+	
+	
+	<!-- 查询一个权限 start -->
+	<select id="getAuthority" parameterType="com.phly.common.base.model.SysAuthorityVO"
+		resultType="com.phly.common.base.model.SysAuthorityVO">
+		select t.AUTHORITY_ID authorityId,t.AUTHORITY_MARK authorityMark,t.AUTHORITY_NAME authorityName,
+			t.AUTHORITY_DESC authorityDesc,t.MESSAGE message,t.ENABLE enable,t.LAST_UPDATE_DATE lastUpdateDate,t.IS_DEL isDel
+			from sys_authorities_t t
+		<where>
+		 1 = 1 and t.IS_DEL = 0
+			 <if test="authorityName != null and authorityName != ''">
+				and t.AUTHORITY_NAME = #{authorityName}
+			</if>
+			 <if test="authorityId != null and authorityId != ''">
+				and t.AUTHORITY_ID = #{authorityId}
+			</if> 
+		</where>
+	</select>
+	<!-- 查询一个权限 end -->
+	
+	
+	<!-- 添加权限信息 start -->
+	<insert id="addAuthority" parameterType="com.phly.common.base.model.SysAuthorityVO">
+		INSERT INTO sys_authorities_t
+		            (AUTHORITY_ID,
+		             AUTHORITY_MARK,
+		             AUTHORITY_NAME,
+		             AUTHORITY_DESC,
+		             MESSAGE,
+		             ENABLE,
+		             IS_DEL,
+		             CREATE_DATE,
+		             CREATOR,
+		             LAST_UPDATE_DATE,
+		             LAST_UPDATER)
+		VALUES (UPPER(REPLACE(UUID(),'-','')),
+				#{authorityMark},
+				#{authorityName},
+		        #{authorityDesc},
+		        #{message},
+		        #{enable},
+		        #{isDel},
+		        #{createDate},
+		        #{creator},
+		        #{lastUpdateDate},
+		        #{lastUpdater}
+		        )
+	</insert>
+	<!-- 添加权限信息 end -->
+	
+	
+	<!-- 添加权限对应的资源信息 start -->
+	<insert id="addAuthorityResource" parameterType="com.phly.common.base.model.SysResourceVO">
+		INSERT INTO sys_authorities_resources_t (
+		  ID,
+		  RESOURCE_ID,
+		  AUTHORITY_ID,
+		  CREATE_DATE,
+		  CREATOR
+		) 
+		VALUES
+		  (UPPER(REPLACE(UUID(), '-', '')),
+		  #{resourceId},
+		  #{authorityId},
+		  NOW(),
+		  #{creator}) 
+	</insert>
+	<!-- 添加权限对应的资源信息 end -->
+	
+	
+	<!-- 修改权限信息 start -->
+	<update id="updateAuthority" parameterType="com.phly.common.base.model.SysAuthorityVO">
+		UPDATE sys_authorities_t
+		SET 
+		  AUTHORITY_MARK = #{authorityMark},
+		  AUTHORITY_NAME =  #{authorityName},
+		  AUTHORITY_DESC = #{authorityDesc},
+		  MESSAGE =#{message},
+		  ENABLE =#{enable},
+		  IS_DEL =#{isDel},
+		  LAST_UPDATER = #{lastUpdater},
+		  LAST_UPDATE_DATE = #{lastUpdateDate}
+		WHERE AUTHORITY_ID = #{authorityId}
+	</update>
+	<!-- 修改权限信息 end -->
+	
+	<!-- 删除权限信息 start -->
+	<delete id="delAuthority" parameterType="com.phly.common.base.model.SysAuthorityVO">
+		UPDATE sys_authorities_t
+		SET 
+		  IS_DEL = 1
+		WHERE AUTHORITY_ID = #{authorityId};
+	</delete>
+	<!-- 删除权限信息 end -->
+	
+	<delete id="delAuthorityResource" parameterType="com.phly.common.base.model.SysAuthorityVO">
+		DELETE FROM sys_authorities_resources_t 
+			WHERE AUTHORITY_ID = #{authorityId}
+	</delete>
+	
+	
+	
+</mapper>

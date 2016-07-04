@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sysResource">
+
+	<!-- 查询资源列表 -->
+	<select id="queryResourceList" parameterType="com.phly.common.base.model.SysResourceVO"
+		resultType="com.phly.common.base.model.SysResourceVO" flushCache="true">
+		select
+		  RESOURCE_ID resourceId,
+		  RESOURCE_TYPE resourceType,
+		  RESOURCE_NAME resourceName,
+		  RESOURCE_DESC resourceDesc,
+		  RESOURCE_PATH resourcePath,
+		  PRIORITY priority,
+		  enable enabled,
+		  (select m.MODULE_NAME from sys_modules_t m where m.MODULE_ID = t.MODULE_ID)  moduleId,
+		  LAST_UPDATE_DATE lastUpdateDate
+		from sys_resources_t t
+		<include refid="getCondition"></include> 
+		<if test="sortFieldName != null and sortFieldName != '' and sortType != null and sortType != ''">
+			ORDER BY ${sortFieldName} ${sortType}
+		</if>
+		<if test="sortFieldName == null or sortFieldName == '' or sortType == null or sortType == ''">
+			ORDER BY T.LAST_UPDATE_DATE DESC
+		</if>
+	</select>
+
+	<select id="getResoureCount" parameterType="com.phly.common.base.model.SysResourceVO"
+		resultType="int" flushCache="true">
+		SELECT count(1) FROM sys_resources_t t  
+		<include refid="getCondition"></include> 
+	</select>
+	
+	<sql id="getCondition">
+	  <where>
+		1 = 1 AND T.IS_DEL = 0
+		<if test="searchList != null and searchList.length > 0">
+			and 
+			<if test="searchRegex == true">
+				<foreach collection="searchList" open="(" close=")" separator="or" item="key">
+					(t.RESOURCE_NAME like CONCAT('%',#{key},'%') or t.RESOURCE_DESC like CONCAT('%',#{key},'%')
+					 or t.RESOURCE_PATH like CONCAT('%',#{key},'%'))
+				</foreach>
+			</if>
+			<if test="searchRegex == false">
+				<foreach collection="searchList" open="(" close=")" separator="or" item="key">
+					(t.RESOURCE_NAME = #{key} or t.RESOURCE_DESC = #{key} or t.RESOURCE_PATH = #{key})
+				</foreach>
+			</if>
+		</if>
+	  </where>
+	</sql>
+	
+	<select id="getResource" parameterType="com.phly.common.base.model.SysResourceVO"
+		resultType="com.phly.common.base.model.SysResourceVO">
+		SELECT 
+		  RESOURCE_ID resourceId,
+		  RESOURCE_TYPE resourceType,
+		  RESOURCE_NAME resourceName,
+		  RESOURCE_DESC resourceDesc,
+		  RESOURCE_PATH resourcePath,
+		  PRIORITY priority,
+		  MODULE_ID moduleId,
+		  ENABLE enabled FROM sys_resources_t t
+		<where>
+			1 = 1 and is_del = 0
+			<if test="resourceName != null and resourceName != ''">
+				and t.RESOURCE_NAME = #{resourceName}
+			</if>
+			<if test="resourcePath != null and resourcePath != ''">
+				and t.RESOURCE_PATH = #{resourcePath}
+			</if>
+			<if test="resourceId != null and resourceId != ''">
+				AND t.RESOURCE_ID = #{resourceId}
+			</if>
+		</where>
+	</select>
+	
+	<insert id="addResource" parameterType="com.phly.common.base.model.SysResourceVO">
+		INSERT INTO sys_resources_t
+		            (RESOURCE_ID,
+		             RESOURCE_TYPE,
+		             RESOURCE_NAME,
+		             RESOURCE_DESC,
+		             RESOURCE_PATH,
+		             PRIORITY,
+		             ENABLE,
+		             MODULE_ID,
+		             CREATE_DATE,
+		             CREATOR,
+		             LAST_UPDATE_DATE,
+		             LAST_UPDATER,
+		             IS_DEL)
+		VALUES (UPPER(REPLACE(UUID(),'-','')),
+				#{resourceType},
+		        #{resourceName},
+		        #{resourceDesc},
+		        #{resourcePath},
+		        #{priority},
+		        #{enabled},
+		        #{moduleId},
+		        NOW(),
+		        #{creator},
+		        NOW(),
+		        #{lastUpdater},
+		        0
+		        )
+	</insert>
+	
+	<update id="updateResource" parameterType="com.phly.common.base.model.SysResourceVO">
+		UPDATE sys_resources_t
+		SET 
+		  RESOURCE_NAME = #{resourceName},
+		  RESOURCE_TYPE = #{resourceType},
+		  RESOURCE_DESC = #{resourceDesc},
+		  RESOURCE_PATH = #{resourcePath},
+		  PRIORITY = #{priority},
+		  ENABLE = ${enabled}
+		WHERE RESOURCE_ID = #{resourceId}
+	</update>
+	
+	<delete id="delResource" parameterType="com.phly.common.base.model.SysResourceVO">
+		UPDATE sys_resources_t
+		SET IS_DEL = 1
+		WHERE RESOURCE_ID = #{resourceId}
+	</delete>
+</mapper>
