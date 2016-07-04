@@ -16,6 +16,27 @@
 	<security:http pattern="/**/*.gif" security="none" />
 	<security:http pattern="/**/*.png" security="none" />
 	
+	<!-- 除了上面的请求不进行安全控制之外，其他的都进行安全控制，采用security默认的配置项 -->
+	<security:http auto-config="true" >
+	
+		<!-- 访问未授权的资源后跳转的页面 -->
+		<security:access-denied-handler error-page="/accessDenied.jsp"/>
+		
+		<!-- 配置登录信息 -->
+		<security:form-login login-page="/login.jsp" login-processing-url="/login" 
+			authentication-success-handler-ref="defaultAuthenticationSuccessHandler"
+			authentication-failure-handler-ref="defaultAuthenticationFailureHandler"
+			password-parameter="password" username-parameter="account" />
+		
+		<!-- 配置注销信息 -->
+		<security:logout invalidate-session="true" logout-url="/logout" 
+			success-handler-ref="defaultLogoutSuccessHandler"/>
+		
+		<!-- 自定义安全拦截器，before="FILTER_SECURITY_INTERCEPTOR"表示在SpringSecurity默认的过滤器之前执行 -->
+		<security:custom-filter ref="filterSecurityInterceptor" before="FILTER_SECURITY_INTERCEPTOR"/>
+		
+	</security:http>
+	
 	<!-- 自定义登录成功处理器 -->
 	<bean id="defaultAuthenticationSuccessHandler" class="com.hunter.common.base.security.DefaultAuthenticationSuccessHandler">
 		<property name="alwaysUseDefaultTargetUrl" value="true" />
@@ -32,27 +53,6 @@
 		<property name="alwaysUseDefaultTargetUrl" value="true" />
 		<property name="defaultTargetUrl" value="/login.jsp" />
 	</bean>
-	
-	<!-- access-denied-page：访问拒绝后跳转的页面 -->
-	<security:http auto-config="true" >
-	
-		<!-- 访问失败之后的页面 -->
-		<security:access-denied-handler error-page="/accessDenied.jsp"/>
-		
-		<!-- 配置登录页面 -->
-		<security:form-login login-page="/login.jsp" login-processing-url="/login" 
-			authentication-success-handler-ref="defaultAuthenticationSuccessHandler"
-			authentication-failure-handler-ref="defaultAuthenticationFailureHandler"
-			password-parameter="password" username-parameter="account" />
-		
-		<!-- 配置注销处理器 -->
-		<security:logout invalidate-session="true" logout-url="/logout" 
-			success-handler-ref="defaultLogoutSuccessHandler"/>
-		
-		<!-- 自定义安全拦截器，before="FILTER_SECURITY_INTERCEPTOR"表示在SpringSecurity默认的过滤器之前执行 -->
-		<security:custom-filter ref="filterSecurityInterceptor" before="FILTER_SECURITY_INTERCEPTOR"/>
-		
-	</security:http>
 	
 	<!-- 安全拦截器，从数据库中加载资源权限数据 -->
 	<bean id="filterSecurityInterceptor" class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
